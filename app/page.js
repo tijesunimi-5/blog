@@ -89,25 +89,15 @@ export default function Home() {
   }, []);
 
   return (
-    <section>
+    <section className="mb-10">
       {/* <Game /> */}
-      <div className="mt-10 relative">
-        {users.map((user) => (
-          <Card styles={"w-[360px] mx-2 mt-3"} key={user.id}>
-            <div>
-              <p className="post-text font-mono relative w-[310px] h-[70px] overflow-hidden text-pretty">
-                {user.post}
-              </p>
-            </div>
-          </Card>
-        ))}
-      </div>
+     
 
       {posts.length === 0 ? (
         <p className="text-center text-3xl font-bold">No posts yet.....</p>
       ) : (
         posts.map((post, index) => (
-          <Card key={index} styles={"mt-2"}>
+          <Card key={index} styles={"w-[360px] mx-2 mt-3"}>
             <div className="relative flex">
               <div className="rounded-full bg-red-300 w-[100px] h-[100px] border-2 border-white overflow-hidden">
                 <img
