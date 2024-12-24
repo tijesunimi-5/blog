@@ -30,8 +30,13 @@ const UserProvider = ({ children }) => {
     setUser((prevUser) => ({ ...prevUser, ...updatedUserData }));
   };
 
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+  };
+
   return (
-    <UserContext.Provider value={{ user, setUser, updateUser }}>
+    <UserContext.Provider value={{ user, setUser, updateUser, logout }}>
       {children}
     </UserContext.Provider>
   );

@@ -16,6 +16,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { format } from "date-fns";
+import Link from "next/link";
 
 const page = () => {
   const router = useRouter();
@@ -123,7 +124,6 @@ const page = () => {
     }
   };
 
-
   //to push the post to database
   const post = async () => {
     if (!postContent) {
@@ -216,112 +216,142 @@ const page = () => {
 
   return (
     <section className="mb-10">
-      <div className="flex">
-        <img src="/default_picture.jpg" className="w-[150px] ml-[-10px]" />
-        <div className="mt-10">
-          <div className="uppercase">{availableUser}</div>
-          <div>{bio}</div>
-          <div className="flex justify-between pr-7">
-            <span>followers: {followers}</span>
-            <span>Following: {following}</span>
-          </div>
-          <div className="flex justify-between ml-[-20px]">
-            <Button
-              styles={"w-[100px] flex justify-between px-5 py-1"}
-              onClick={() => router.push("/edit")}
-            >
-              Edit <FaTools className="mt-1" />
-            </Button>
-            <Button
-              styles={"flex justify-between px-3 py-1"}
-              onClick={createPost}
-            >
-              Create a post <FaPen className="mt-1 ml-2" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div id="postDiv" className="mt-4">
-        <div id="createPost"></div>
-        {PostInput && (
-          <div>
-            <textarea
-              className="post border-2 border-black rounded-md w-[335px] h-[150px] mx-5 px-1"
-              onChange={(e) => setPostContent(e.target.value)}
-            ></textarea>
-            <Button styles={"py-1 px-5 font-semibold flex ml-5"} onClick={post}>
-              {postBtn}
-              <FaRocket className="mt-1 ml-2" />
-            </Button>
-          </div>
-        )}
-
-        <p className="text-center">{message}</p>
-      </div>
-
-      <div id="posted" className="px-2">
-        {/* still going to map posts */}
-        <h1 className="text-2xl font-bold mb-5">Posts -</h1>
-
-        {posts.length === 0 ? (
-          <p className="text-center text-3xl font-bold">No posts yet.....</p>
-        ) : (
-          posts.map((post, index) => (
-            <Card key={index} styles={"mt-2"}>
-              <div id="userProfile" className="mb-4 flex relative">
-                <div className="mt-3">
-                  <img
-                    src="/default_picture.jpg"
-                    className="w-[50px] rounded-full"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <h1 className="text-xl font-bold ml-1 mt-3">{post.name}</h1>
-                  <p className="ml-1">{post.bio}</p>
-                </div>
-                <div>
-                  <Button
-                    styles={`flex px-2 ${white} absolute right-12`}
-                    onClick={() => pinPost(post.postId, post.isPinned)}
-                  >
-                    {post.isPinned ? "Pinned" : "Pin"}
-                    <FaThumbtack className="text-white m-1 ml-1" />
-                  </Button>
-
-                  <Button styles={"flex text-white absolute px-2 right-0"}>
-                    <FaTrash className="text-white m-1 ml-1" />
-                  </Button>
-                </div>
+      {user ? (
+        <>
+          <div className="flex">
+            <img src="/default_picture.jpg" className="w-[150px] ml-[-10px]" />
+            <div className="mt-10">
+              <div className="uppercase">{availableUser}</div>
+              <div>{bio}</div>
+              <div className="flex justify-between pr-7">
+                <span>followers: {followers}</span>
+                <span>Following: {following}</span>
               </div>
-              <p>{post.post}</p>
-              <div className="bg-white flex justify-between overflow-hidden rounded w-[355px] py-2 px-1 ml-[-10px] mt-3">
+              <div className="flex justify-between ml-[-20px]">
                 <Button
-                  styles={`btn flex ${color} px-2`}
-                  onClick={() => setLike(post.postId, post.isLiked)}
+                  styles={"w-[100px] flex justify-between px-5 py-1"}
+                  onClick={() => router.push("/edit")}
                 >
-                  {post.isLiked ? "Liked" : "Like"}
-                  <FaHeart className={`like ${width} m-1 ml-1`} />
+                  Edit <FaTools className="mt-1" />
                 </Button>
-
-                <Button styles={"flex text-white px-2"}>
-                  Share
-                  <FaShare className="text-white m-1 ml-1" />
-                </Button>
-                <Button styles={"flex text-white px-2"}>
-                  Edit
-                  <FaPen className="text-white m-1 ml-1" />
-                </Button>
-
-                <Button styles={"flex text-white px-1"}>
-                  Comment <FaComment className="text-white m-1 ml-1" />
+                <Button
+                  styles={"flex justify-between px-3 py-1"}
+                  onClick={createPost}
+                >
+                  Create a post <FaPen className="mt-1 ml-2" />
                 </Button>
               </div>
-              <p className="pt-4 underline">created at: {post.createdAt}</p>
-            </Card>
-          ))
-        )}
-      </div>
+            </div>
+          </div>
+
+          <div id="postDiv" className="mt-4">
+            <div id="createPost"></div>
+            {PostInput && (
+              <div>
+                <textarea
+                  className="post border-2 border-black rounded-md w-[335px] h-[150px] mx-5 px-1"
+                  onChange={(e) => setPostContent(e.target.value)}
+                ></textarea>
+                <Button
+                  styles={"py-1 px-5 font-semibold flex ml-5"}
+                  onClick={post}
+                >
+                  {postBtn}
+                  <FaRocket className="mt-1 ml-2" />
+                </Button>
+              </div>
+            )}
+
+            <p className="text-center">{message}</p>
+          </div>
+
+          <div id="posted" className="px-2">
+            {/* still going to map posts */}
+            <h1 className="text-2xl font-bold mb-5">Posts -</h1>
+
+            {posts.length === 0 ? (
+              <p className="text-center text-3xl font-bold">
+                No posts yet.....
+              </p>
+            ) : (
+              posts.map((post, index) => (
+                <Card key={index} styles={"mt-2"}>
+                  <div id="userProfile" className="mb-4 flex relative">
+                    <div className="mt-3">
+                      <img
+                        src="/default_picture.jpg"
+                        className="w-[50px] rounded-full"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <h1 className="text-xl font-bold ml-1 mt-3">
+                        {post.name}
+                      </h1>
+                      <p className="ml-1">{post.bio}</p>
+                    </div>
+                    <div>
+                      <Button
+                        styles={`flex px-2 ${white} absolute right-12`}
+                        onClick={() => pinPost(post.postId, post.isPinned)}
+                      >
+                        {post.isPinned ? "Pinned" : "Pin"}
+                        <FaThumbtack className="text-white m-1 ml-1" />
+                      </Button>
+
+                      <Button styles={"flex text-white absolute px-2 right-0"}>
+                        <FaTrash className="text-white m-1 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                  <p>{post.post}</p>
+                  <div className="bg-white flex justify-between overflow-hidden rounded w-[355px] py-2 px-1 ml-[-10px] mt-3">
+                    <Button
+                      styles={`btn flex ${color} px-2`}
+                      onClick={() => setLike(post.postId, post.isLiked)}
+                    >
+                      {post.isLiked ? "Liked" : "Like"}
+                      <FaHeart className={`like ${width} m-1 ml-1`} />
+                    </Button>
+
+                    <Button styles={"flex text-white px-2"}>
+                      Share
+                      <FaShare className="text-white m-1 ml-1" />
+                    </Button>
+                    <Button styles={"flex text-white px-2"}>
+                      Edit
+                      <FaPen className="text-white m-1 ml-1" />
+                    </Button>
+
+                    <Button styles={"flex text-white px-1"}>
+                      Comment <FaComment className="text-white m-1 ml-1" />
+                    </Button>
+                  </div>
+                  <p className="pt-4 underline">created at: {post.createdAt}</p>
+                </Card>
+              ))
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex">
+            <img src="/default_picture.jpg" className="w-[150px] ml-[-10px]" />
+            <div className="mt-10">
+              <div className="uppercase">{availableUser}</div>
+              <div>{bio}</div>
+              <div className="flex justify-between pr-7">
+                <span>followers: {followers}</span>
+                <span className="pl-5">Following: {following}</span>
+              </div>
+              
+            </div>
+          </div>
+
+          <div className="text-center justify-center mt-40 text-xl">
+            Please proceed to <Link className="underline font-semibold" href={'/register/login'}>login</Link>
+          </div>
+        </>
+      )}
     </section>
   );
 };
