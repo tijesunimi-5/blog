@@ -11,12 +11,9 @@ const page = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
-  const { setUser} = useContext(UserContext)
+  const { setUser } = useContext(UserContext);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-
- 
-
 
   const handleError = (message) => {
     setError(message);
@@ -49,20 +46,18 @@ const page = () => {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        setUser(data.blogger)
+        setUser(data.blogger);
         console.log(data.blogger);
         handleError("Login successful");
-        router.push('/')
-        
+        router.push("/");
       } else {
-        handleError(data.message)
+        handleError(data.message);
       }
     } catch (error) {
-      handleError('An error occured during login')
+      handleError("An error occured during login");
     }
 
     setLoading(false);
-
   };
 
   return (

@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import { UserProvider } from "@/context/userContext";
 import Menu from "@/components/Menu";
+import { PostProvider } from "@/context/postContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,7 +29,7 @@ export default function RootLayout({ children }) {
       >
         <UserProvider>
           <Header />
-          {children}
+          <PostProvider>{children}</PostProvider>
         </UserProvider>
       </body>
     </html>

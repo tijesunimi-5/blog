@@ -53,6 +53,8 @@ export async function POST(req) {
           followers: blogger.followers,
           following: blogger.following,
           isFollowing: blogger.isFollowing,
+          profile_picture: blogger.profile_picture,
+          userId: blogger._id,
         },
       }),
       { status: 200 }

@@ -61,6 +61,15 @@ const Menu = ({toogleMenuOff}) => {
         </Link>
       </Button>
 
+      <Button
+        styles={"bg-white text-blue-300 mt-3 w-[300px] border-blue-300"}
+        onClick={toogleMenuOff}
+      >
+        <Link href={"/users"} className=" text-xl w-full">
+          See Users
+        </Link>
+      </Button>
+
       <Button styles={"mt-3 w-[300px]"} onClick={toogleMenuOff}>
         <Link href={"/settings"} className=" text-xl w-[300px]">
           Settings

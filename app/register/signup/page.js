@@ -35,14 +35,11 @@ const page = () => {
       setTimeout(() => setError(""), 3000);
     };
 
-    
-
-
     if (!email || !name || !password) {
-      handleError('All fields are required')
+      handleError("All fields are required");
       return;
     }
-    
+
     try {
       const response = await fetch("/api/register-apis/signup-api", {
         method: "POST",
@@ -58,11 +55,12 @@ const page = () => {
           isFollowing: isFollowing,
           followers: followers,
           following: following,
+          profile_picture: "/default_picture.jpg",
         }),
       });
       const result = await response.json();
       if (result.success) {
-        handleError('Sign up successful')
+        handleError("Sign up successful");
         router.push("/register/login");
       } else {
         handleError("Failed to register");
@@ -88,7 +86,8 @@ const page = () => {
               required
               id="email"
               className="w-[325px] shadow-sm rounded-md px-1"
-              onChange={(e) => { console.log(e.target.value)
+              onChange={(e) => {
+                console.log(e.target.value);
                 setEmail(e.target.value);
               }}
             />
@@ -124,7 +123,9 @@ const page = () => {
             />
           </div>
 
-          <Button styles={"mt-5 px-8 py-1"} onClick={handleSignIn}>Sign up</Button>
+          <Button styles={"mt-5 px-8 py-1"} onClick={handleSignIn}>
+            Sign up
+          </Button>
         </form>
         <div className="mt-5 font-[600]">
           Have an account already?{" "}

@@ -2,7 +2,8 @@ import clientPromise from "@/lib/mongodb";
 
 export async function POST(req) {
   try {
-    const { post, email, name, bio, isLiked, isPinned } = await req.json();
+    const { post, email, name, bio, isLiked, isPinned, profile_picture } =
+      await req.json();
 
     const client = await clientPromise;
     const db = client.db("blogger_data");
@@ -19,11 +20,35 @@ export async function POST(req) {
 
     const result = await db
       .collection("posts")
-      .insertOne({ email, post, name, bio, createdAt: new Date(), isLiked, isPinned });
+      .insertOne({
+        email,
+        post,
+        name,
+        bio,
+        createdAt: new Date(),
+        isLiked,
+        isPinned,
+        profile_picture,
+      });
 
-    return new Response(JSON.stringify({ success: true, result }), {
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        result,
+        post: {
+          name: name,
+          post: post,
+          isLiked: isLiked,
+          email: email,
+          bio: bio,
+          CreatedAt: new Date(),
+          picture: profile_picture,
+        },
+      }),
+      {
+        status: 200,
+      }
+    );
   } catch (error) {
     console.error("Failed to post:", error);
     return new Response(

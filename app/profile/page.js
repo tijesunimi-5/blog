@@ -17,11 +17,11 @@ import {
 } from "react-icons/fa";
 import { format } from "date-fns";
 import Link from "next/link";
+import { PostContext } from "@/context/postContext";
 
 const page = () => {
   const router = useRouter();
   const [PostInput, setPostInput] = useState(false);
-  const green = "text-green-500";
   const white = "text-white";
   const [color, setColor] = useState(white);
   const [width, setWidth] = useState("text-[15px]");
@@ -42,6 +42,10 @@ const page = () => {
   const [postBtn, setPostBtn] = useState("");
   const [isLiked, setIsLiked] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [profile_picture, setProfile_picture] = useState(
+    "/default_picture.jpg"
+  );
+  const {setPost, addPost} = useContext(PostContext)
 
   const handleMessage = (message) => {
     setMessage(message);
@@ -55,15 +59,17 @@ const page = () => {
       setBio(<h2 className="font-semibold">{user.bio}</h2>);
       setFollowers(user.followers);
       setFollowing(user.following);
+      setProfile_picture(user.profile_picture);
     }
     // console.log(user.username)
   }, [user]);
 
-  //fot the create post btn
+  //for the create post btn
   const createPost = () => {
     setPostInput(true);
   };
 
+  //to pin post
   const pinPost = async (postId, currentPinnedStatus) => {
     try {
       const updatedPinned = !currentPinnedStatus;
@@ -94,6 +100,7 @@ const page = () => {
     }
   };
 
+  //to set like post status
   const setLike = async (postId, currentLikedStatus) => {
     try {
       const updatedLiked = !currentLikedStatus;
@@ -148,10 +155,12 @@ const page = () => {
           bio: user.bio,
           isLiked: isLiked,
           isPinned: isPinned,
+          profile_picture: profile_picture,
         }),
       });
 
       const result = await res.json();
+      
 
       if (result.success) {
         if (posted) return;
@@ -159,6 +168,7 @@ const page = () => {
         setPostInput(false);
         handleMessage("Your post has been published...");
         window.location.reload();
+        addPost(result.post)
       } else {
         handleMessage("Failed to post....");
       }
@@ -219,7 +229,10 @@ const page = () => {
       {user ? (
         <>
           <div className="flex">
-            <img src="/default_picture.jpg" className="w-[150px] ml-[-10px]" />
+            <img
+              src={profile_picture || "/default_picture.jpg"}
+              className="w-[150px] ml-[-10px]"
+            />
             <div className="mt-10">
               <div className="uppercase">{availableUser}</div>
               <div>{bio}</div>
@@ -343,12 +356,14 @@ const page = () => {
                 <span>followers: {followers}</span>
                 <span className="pl-5">Following: {following}</span>
               </div>
-              
             </div>
           </div>
 
           <div className="text-center justify-center mt-40 text-xl">
-            Please proceed to <Link className="underline font-semibold" href={'/register/login'}>login</Link>
+            Please proceed to{" "}
+            <Link className="underline font-semibold" href={"/register/login"}>
+              login
+            </Link>
           </div>
         </>
       )}

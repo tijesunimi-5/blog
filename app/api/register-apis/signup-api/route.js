@@ -12,6 +12,7 @@ export async function POST(req) {
       isFollowing,
       followers,
       following,
+      profile_picture,
     } = await req.json();
 
     const client = await clientPromise;
@@ -34,6 +35,7 @@ export async function POST(req) {
       followers,
       following,
       isFollowing,
+      profile_picture,
     });
     return new Response(JSON.stringify({ success: true, result }), {
       status: 200,

@@ -1,174 +1,150 @@
 "use client";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
-import Game from "@/components/Game";
-import { getAllUser } from "@/dummy/user";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { PostContext } from "@/context/postContext";
+import { UserContext } from "@/context/userContext";
 import { format } from "date-fns";
-import {
-  FaComment,
-  FaHeart,
-  FaPen,
-  FaShare,
-  FaThumbtack,
-  FaTrash,
-} from "react-icons/fa";
+import { useRouter } from "next/navigation";
+import React, { useContext, useEffect, useState } from "react";
+import { FaComment, FaHeart, FaShare, FaTrash } from "react-icons/fa";
 
-export default function Home() {
-  const initialUsers = getAllUser();
-  const [users, setUsers] = useState(initialUsers); // Properly set initial state
-  const router = useRouter();
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [followers, setFollowers] = useState(0);
-  const white = "text-white";
+const page = () => {
   const [posts, setPosts] = useState([]);
-  const [color, setColor] = useState(white);
-  const [width, setWidth] = useState("text-[15px]");
+  const router = useRouter();
+  const { allUsers, updateAllUsers } = useContext(UserContext);
+  const { setPost, post, updatePost } =
+    useContext(PostContext);
+  const isLiked = false;
+  const [isFollowing, setIsFollowing] = useState(false);
 
-  //to load users from localstorage on component mount
-  // useEffect(() => {
-  //   const savedUsers = localStorage.getItem("users");
-  //   if (savedUsers) {
-  //     setUsers(JSON.parse(savedUsers));
-  //   }
-  // }, []);
 
-  //Save users to localstorage whenever users state changes
-  // useEffect(() => {
-  //   localStorage.setItem("users", JSON.stringify(users));
-  // }, [users]);
 
-  // Toggle following state for a specific user
-  const setFollowing = (userId) => {
-    setFollowers(userId.followers || 0);
-    setIsFollowing(userId.isFollowing || false);
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === userId
-          ? {
-              ...user,
-              isFollowing: !user.isFollowing,
-              followers: isFollowing ? followers - 1 : followers + 1,
-            }
-          : user
-      )
-    );
-  };
-
+  //this function is to fetch post
   useEffect(() => {
-    const formatCreatedAt = (dateString) => {
-      const date = new Date(dateString);
-      return format(date, "do 'of' MMM, yyyy");
-    };
-
-    const fetchPosts = async () => {
-      try {
-        const res = await fetch("/api/post-apis/getposts-api");
-        const data = await res.json();
-
-        if (data.success) {
-          // Format the `createdAt` field for each post
-          const formattedPosts = data.posts.map((post) => ({
-            ...post,
-            createdAt: formatCreatedAt(post.createdAt),
-            postId: post._id,
-          }));
-
-          setPosts(formattedPosts);
-        } else {
-          setPosts([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch posts:", error);
-        setPosts([]);
+    const storedPosts = localStorage.getItem("posts");
+    
+    const fetchPosts = () => {
+      if (storedPosts) {
+        setPost(JSON.parse(storedPosts));
+        setPosts(post);
+        return;
+      } else {
+        // Fallback: Fetch from server if localStorage is empty
+        // fetchPosts();
       }
     };
 
     fetchPosts();
   }, []);
 
-  return (
-    <section className="mb-10">
-      {/* <Game /> */}
-     
 
+
+  //this function is to like a single post
+  // const setLike = async (postId, currentLikedStatus) => {
+  //   try {
+  //     const updatedLiked = !currentLikedStatus;
+
+  //     const res = await fetch("/api/post-apis/updatePostStatus-api", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         postId,
+  //         isLiked: updatedLiked,
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (data.success) {
+  //       setPosts((prevPosts) =>
+  //         prevPosts.map((post) =>
+  //           post.postId === postId ? { ...post, isLiked: updatedLiked } : post
+  //         )
+  //       );
+  //     } else {
+  //       console.error("Failed:", data.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed:", error);
+  //   }
+  // };
+  const setLike = (postId, currentLikedStatus) => {
+    const updatedLiked = !currentLikedStatus;
+
+    const updatedPosts = posts.map((post) =>
+      post.postId === postId ? { ...post, isLiked: updatedLiked } : post
+    );
+
+    updatePost({ postId, isLiked: updatedLiked });
+    setPosts(post)
+    // setPostsAndPersist(updatedPosts);
+  };
+
+
+
+  return (
+    <section>
       {posts.length === 0 ? (
-        <p className="text-center text-3xl font-bold">No posts yet.....</p>
+        <p className="text-center text-3xl font-bold">No Post Yet......</p>
       ) : (
         posts.map((post, index) => (
           <Card key={index} styles={"w-[360px] mx-2 mt-3"}>
             <div className="relative flex">
-              <div className="rounded-full bg-red-300 w-[100px] h-[100px] border-2 border-white overflow-hidden">
-                <img
-                  src={post.profile_picture}
-                  alt={`${post.name}'s profile`}
-                />
-              </div>
-
-              <div className="flex flex-col mt-2 w-[220px]">
-                <span className="text-[1em] font-extrabold">{post.name}</span>
-                <p className="pl-1 font-semibold w-[220px] break-words overflow-hidden">
-                  {post.bio}
-                </p>
-                <div className="flex w-[300px] ml-[0px]">
-                  <Button
-                    styles={"w-[110px] mt-5"}
-                    onClick={() => setFollowing(post.id)}
-                  >
-                    {post.isFollowing ? "Following" : "Follow"}
-                  </Button>
-                  <Button
-                    styles={"w-[110px] mt-5 ml-2"}
-                    onClick={() => {
-                      router.push(`/profile/${post.id}`);
-                    }}
-                  >
-                    See profile
-                  </Button>
-                </div>
+              <img
+                src={post.picture}
+                alt={`${post.name}'s profile`}
+                className="rounded-full bg-red-300 w-[90px] h-[90px] border-2 border-white overflow-hidden"
+              />
+              <div className="ml-4">
+                <h1 className="font-extrabold text-[1.5em]">{post.name}</h1>
+                <Button styles={"w-[110px] mt-5"}>
+                  {post.isFollowing ? "Following" : "Follow"}
+                </Button>
+                <Button
+                  styles={"w-[110px] mt-5 ml-2"}
+                  onClick={() => router.push(`/profile/${post.id}`)}
+                >
+                  See profile
+                </Button>
               </div>
             </div>
 
-            <hr className="mt-5 h-4 " />
-
+            <hr className="mt-5 border-2" />
             <div>
               <span className="font-semibold font-sans text-xl">
                 Best post:
               </span>
-              <p className="post-text font-mono relative w-[310px] h-[70px] overflow-hidden text-pretty">
-                {post.post}
-              </p>
-              <Button styles={"read-more cursor-pointer px-2 ml-[200px] my-2"}>
-                See more...
-              </Button>
+              <p className="font-mono relative w-[310px]">{post.post}</p>
             </div>
-            <div className="bg-white flex justify-between overflow-hidden rounded w-[355px] py-2 px-1 ml-[-10px] mt-3">
+
+            <div className="bg-white flex justify-between overflow-hidden rounded w-[355px] py-2 px-1 ml-[-10px]">
               <Button
-                styles={`btn flex ${color} px-2`}
-                onClick={() => setLike(post.postId, post.isLiked)}
+                styles={`btn flex text-white px-2`}
+                onClick={() => setLike(post._id, post.isLiked)}
               >
-                {post.isLiked ? "Liked" : "Like"}
-                <FaHeart className={`like ${width} m-1 ml-1`} />
+                {post.isLiked ? "Liked" : "Like"}{" "}
+                <FaHeart className={`like m-1 ml-1`} />
               </Button>
 
               <Button styles={"flex text-white px-2"}>
                 Share
-                <FaShare className="text-white m-1 ml-1" />
-              </Button>
-              <Button styles={"flex text-white px-2"}>
-                Edit
-                <FaPen className="text-white m-1 ml-1" />
+                <FaShare className=" m-1 ml-1" />
               </Button>
 
               <Button styles={"flex text-white px-1"}>
-                Comment <FaComment className="text-white m-1 ml-1" />
+                Delete
+                <FaTrash className="m-1 ml-1" />
               </Button>
             </div>
-            <p className="pt-4 underline">created at: {post.createdAt}</p>
+
+            <div id="comment" className=""></div>
           </Card>
         ))
       )}
     </section>
   );
-}
+};
+
+export default page;
