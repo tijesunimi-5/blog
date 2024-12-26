@@ -1,10 +1,12 @@
 "use client";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
+import { PostContext } from "@/context/postContext";
 import { UserContext } from "@/context/userContext";
+import { format } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useContext, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { FaEnvelope, FaKey } from "react-icons/fa";
 
 const page = () => {
@@ -14,6 +16,7 @@ const page = () => {
   const { setUser } = useContext(UserContext);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { setPost } = useContext(PostContext);
 
   const handleError = (message) => {
     setError(message);
@@ -49,6 +52,35 @@ const page = () => {
         setUser(data.blogger);
         console.log(data.blogger);
         handleError("Login successful");
+
+        const formatCreatedAt = (dateString) => {
+          const date = new Date(dateString);
+          return format(date, "do 'of' MMM, yyyy");
+        };
+
+        const fetchPosts = async () => {
+          try {
+            const res = await fetch("/api/post-apis/getposts-api");
+            const data = await res.json();
+
+            if (data.success) {
+              // Format the `createdAt` field for each post
+              const formattedPosts = data.posts.map((post) => ({
+                ...post,
+                createdAt: formatCreatedAt(post.createdAt),
+                postId: post._id,
+              }));
+
+              setPost(formattedPosts);
+            } else {
+              setPost([]);
+            }
+          } catch (error) {
+            console.error("Failed to fetch posts:", error);
+          }
+        };
+
+        fetchPosts();
         router.push("/");
       } else {
         handleError(data.message);

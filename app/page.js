@@ -12,64 +12,22 @@ const page = () => {
   const [posts, setPosts] = useState([]);
   const router = useRouter();
   const { allUsers, updateAllUsers } = useContext(UserContext);
-  const { setPost, post, updatePost } =
-    useContext(PostContext);
+  const { setPost, post, updatePost } = useContext(PostContext);
   const isLiked = false;
   const [isFollowing, setIsFollowing] = useState(false);
 
-
-
   //this function is to fetch post
   useEffect(() => {
+    // Load posts from localStorage on initial render
     const storedPosts = localStorage.getItem("posts");
-    
-    const fetchPosts = () => {
-      if (storedPosts) {
-        setPost(JSON.parse(storedPosts));
-        setPosts(post);
-        return;
-      } else {
-        // Fallback: Fetch from server if localStorage is empty
-        // fetchPosts();
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
-
+    if (storedPosts) {
+      const parsedPosts = JSON.parse(storedPosts);
+      setPost(parsedPosts); // Update context
+      setPosts(parsedPosts); // Update local state
+    }
+  }, [setPost]);
 
   //this function is to like a single post
-  // const setLike = async (postId, currentLikedStatus) => {
-  //   try {
-  //     const updatedLiked = !currentLikedStatus;
-
-  //     const res = await fetch("/api/post-apis/updatePostStatus-api", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         postId,
-  //         isLiked: updatedLiked,
-  //       }),
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (data.success) {
-  //       setPosts((prevPosts) =>
-  //         prevPosts.map((post) =>
-  //           post.postId === postId ? { ...post, isLiked: updatedLiked } : post
-  //         )
-  //       );
-  //     } else {
-  //       console.error("Failed:", data.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed:", error);
-  //   }
-  // };
   const setLike = (postId, currentLikedStatus) => {
     const updatedLiked = !currentLikedStatus;
 
@@ -78,28 +36,90 @@ const page = () => {
     );
 
     updatePost({ postId, isLiked: updatedLiked });
-    setPosts(post)
+    setPosts(post);
     // setPostsAndPersist(updatedPosts);
   };
 
+  //this function is to toggle follow for a single post
+  const toggleFollow = (postUser) => {
+    // Retrieve posts from localStorage
+    const storedPosts = localStorage.getItem("posts");
 
+    if (storedPosts) {
+      const parsedPosts = JSON.parse(storedPosts);
+
+      // Find the data for the given name
+      const matchedData = parsedPosts.find((post) => post.name === postUser);
+
+      if (matchedData) {
+        console.log("Data found:", matchedData);
+        // Perform any action with the matched data
+        // e.g., set it to state
+        // setPosts([matchedData]);
+      } else {
+        console.log("No data found for the given name.");
+      }
+    } else {
+      console.log("No posts found in localStorage.");
+    }
+  };
+
+  //to fetch post
+  useEffect(()=> {
+
+    if (post.length === 0) {
+      const formatCreatedAt = (dateString) => {
+        const date = new Date(dateString);
+        return format(date, "do 'of' MMM, yyyy");
+      };
+  
+      const fetchPosts = async () => {
+        try {
+          const res = await fetch("/api/post-apis/getposts-api");
+          const data = await res.json();
+  
+          if (data.success) {
+            // Format the `createdAt` field for each post
+            const formattedPosts = data.posts.map((post) => ({
+              ...post,
+              createdAt: formatCreatedAt(post.createdAt),
+              postId: post._id,
+            }));
+  
+            setPosts(formattedPosts);
+            console.log('working')
+          } else {
+            setPost([]);
+          }
+  
+          fetchPosts();
+        } catch (error) {
+          console.error("Failed to fetch posts:", error);
+          setPost([]);
+        }
+      };
+    }
+  }, [post])
 
   return (
     <section>
       {posts.length === 0 ? (
-        <p className="text-center text-3xl font-bold">No Post Yet......</p>
+        <p className="text-center text-3xl font-bold">No Post Yet And Make Sure To Login First......</p>
       ) : (
         posts.map((post, index) => (
           <Card key={index} styles={"w-[360px] mx-2 mt-3"}>
             <div className="relative flex">
               <img
-                src={post.picture}
+                src={post.profile_picture || post.picture}
                 alt={`${post.name}'s profile`}
                 className="rounded-full bg-red-300 w-[90px] h-[90px] border-2 border-white overflow-hidden"
               />
               <div className="ml-4">
                 <h1 className="font-extrabold text-[1.5em]">{post.name}</h1>
-                <Button styles={"w-[110px] mt-5"}>
+                <Button
+                  styles={"w-[110px] mt-5"}
+                  onClick={() => toggleFollow()}
+                >
                   {post.isFollowing ? "Following" : "Follow"}
                 </Button>
                 <Button

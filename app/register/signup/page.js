@@ -17,9 +17,12 @@ const page = () => {
   const followers = 0;
   const following = 0;
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
 
     if (!email.match(/^\S+@\S+\.\S+$/)) {
       setError("Please enter a valid email address");
@@ -68,6 +71,8 @@ const page = () => {
     } catch (error) {
       handleError("An error occured during sign up");
     }
+
+    setLoading(false);
   };
 
   return (
@@ -124,7 +129,7 @@ const page = () => {
           </div>
 
           <Button styles={"mt-5 px-8 py-1"} onClick={handleSignIn}>
-            Sign up
+            {loading ? 'Signing up..' : 'Sign up'}
           </Button>
         </form>
         <div className="mt-5 font-[600]">

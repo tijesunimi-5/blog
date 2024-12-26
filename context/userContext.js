@@ -12,7 +12,6 @@ const UserProvider = ({ children }) => {
     if (typeof window !== "undefined") {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
-        console.log("Retrieved user from localStorage:", storedUser);
         setUser(JSON.parse(storedUser));
       }
       const allStoredUser = localStorage.getItem("users");
@@ -25,18 +24,14 @@ const UserProvider = ({ children }) => {
   // Update localStorage whenever the user state changes
   useEffect(() => {
     if (user) {
-      console.log("Saving user to localStorage:", user);
       localStorage.setItem("user", JSON.stringify(user));
     } else {
-      console.log("Removing user from localStorage");
       localStorage.removeItem("user");
     }
 
     if (allUsers) {
       localStorage.setItem("Users update:", JSON.stringify(allUsers));
-      console.log("updating state to local storage:", allUsers);
     } else {
-      console.log("Removing user:");
       localStorage.removeItem("users");
     }
   }, [user, allUsers]);

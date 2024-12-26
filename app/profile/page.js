@@ -20,12 +20,13 @@ import Link from "next/link";
 import { PostContext } from "@/context/postContext";
 
 const page = () => {
+  const { addPost, post, setPost } = useContext(PostContext);
   const router = useRouter();
   const [PostInput, setPostInput] = useState(false);
   const white = "text-white";
   const [color, setColor] = useState(white);
   const [width, setWidth] = useState("text-[15px]");
-  const { user, updateUser } = useContext(UserContext);
+  const { user, updateUser, allUsers } = useContext(UserContext);
   const [availableUser, setAvailableUser] = useState(
     <h1 className="font-bold lowercase text-xl ml-[-15px]">@Guest</h1>
   );
@@ -45,7 +46,7 @@ const page = () => {
   const [profile_picture, setProfile_picture] = useState(
     "/default_picture.jpg"
   );
-  const {setPost, addPost} = useContext(PostContext)
+  const loggedUser = localStorage.getItem('user')
 
   const handleMessage = (message) => {
     setMessage(message);
@@ -132,10 +133,10 @@ const page = () => {
   };
 
   //to push the post to database
-  const post = async () => {
+  const Post = async () => {
     if (!postContent) {
       setPostBtn("Post");
-      handleMessage("Can't publish an empty post...");
+      handleMessage("Can't publish an empty P...");
       return;
     }
 
@@ -160,7 +161,6 @@ const page = () => {
       });
 
       const result = await res.json();
-      
 
       if (result.success) {
         if (posted) return;
@@ -168,7 +168,7 @@ const page = () => {
         setPostInput(false);
         handleMessage("Your post has been published...");
         window.location.reload();
-        addPost(result.post)
+        addPost(result.post);
       } else {
         handleMessage("Failed to post....");
       }
@@ -198,9 +198,14 @@ const page = () => {
             ...post,
             createdAt: formatCreatedAt(post.createdAt),
             postId: post._id,
-          }));
+          } ));
 
-          setPosts(formattedPosts);
+          const parsedUser = JSON.parse(loggedUser);
+          console.log(parsedUser.username, formattedPosts);
+          const filtered = formattedPosts.filter((post) => post.name === parsedUser.username)
+
+
+          setPosts(filtered);
         } else {
           setPosts([]);
         }
@@ -223,6 +228,23 @@ const page = () => {
       setPostBtn("Post");
     }
   }, [posting, posted]);
+
+  
+  
+
+  // useEffect(() => {
+  //   if (user) {
+  //     const loggedInUser = user;
+
+  //     const available = posts.filter(
+  //       (post) => post.name === loggedInUser.username
+  //     );
+  //     setPosts(available)
+      
+
+  //     console.log("This is the one!:", available);
+  //   }
+  // }, [user]);
 
   return (
     <section className="mb-10">
@@ -267,7 +289,7 @@ const page = () => {
                 ></textarea>
                 <Button
                   styles={"py-1 px-5 font-semibold flex ml-5"}
-                  onClick={post}
+                  onClick={Post}
                 >
                   {postBtn}
                   <FaRocket className="mt-1 ml-2" />
