@@ -5,53 +5,72 @@ const UserContext = createContext();
 
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [allUsers, setAllUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedUsers = localStorage.getItem("users");
+      return storedUsers ? JSON.parse(storedUsers) : [];
+    }
+    return [];
+  });
 
-  // Ensuring the code runs only on the client side
+  // Load user from localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
-      const allStoredUser = localStorage.getItem("users");
-      if (allStoredUser) {
-        setAllUsers(JSON.parse(allStoredUser));
-      }
     }
   }, []);
 
-  // Update localStorage whenever the user state changes
+  // Sync user with localStorage
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
     } else {
       localStorage.removeItem("user");
     }
+  }, [user]);
 
-    if (allUsers) {
-      localStorage.setItem("Users update:", JSON.stringify(allUsers));
-    } else {
-      localStorage.removeItem("users");
+  // Sync allUsers with localStorage
+  useEffect(() => {
+    if (allUsers?.length > 0) {
+      localStorage.setItem("users", JSON.stringify(allUsers));
     }
-  }, [user, allUsers]);
+  }, [allUsers]);
 
-  // Function to update user data in context and localStorage
+  // Function to update a specific user
   const updateUser = (updatedUserData) => {
     setUser((prevUser) => ({ ...prevUser, ...updatedUserData }));
   };
 
+  // Function to update a user in the allUsers array
   const updateAllUsers = (updatedUser) => {
-    setAllUsers((prevUser) => ({ ...prevUser, ...updatedUser}))
-  }
+    setAllUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.userId === updatedUser.userId ? { ...user, ...updatedUser } : user
+      )
+    );
+  };
 
+  // Logout function
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, updateUser, logout, allUsers, setAllUsers, updateAllUsers }}>
+    <UserContext.Provider
+      value={{
+        user,
+        setUser,
+        updateUser,
+        logout,
+        allUsers,
+        setAllUsers,
+        updateAllUsers,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

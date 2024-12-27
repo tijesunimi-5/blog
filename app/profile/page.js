@@ -26,7 +26,7 @@ const page = () => {
   const white = "text-white";
   const [color, setColor] = useState(white);
   const [width, setWidth] = useState("text-[15px]");
-  const { user, updateUser, allUsers } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const [availableUser, setAvailableUser] = useState(
     <h1 className="font-bold lowercase text-xl ml-[-15px]">@Guest</h1>
   );
@@ -46,12 +46,40 @@ const page = () => {
   const [profile_picture, setProfile_picture] = useState(
     "/default_picture.jpg"
   );
-  const loggedUser = localStorage.getItem('user')
+  const [userPosts, setUserPosts] = useState([]);
 
   const handleMessage = (message) => {
     setMessage(message);
     setTimeout(() => setMessage(""), 3000);
   };
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch("/api/post-apis/getposts-api");
+        const data = await res.json();
+
+        if (data.success) {
+          setPosts(data.posts);
+
+          if (user) {
+            const filteredPosts = data.posts.filter(
+              (post) => post.name === user.username
+            );
+            setUserPosts(filteredPosts);
+          }
+        } else {
+          setMessage("No Posts available");
+        }
+      } catch (error) {
+        console.error("Failed to fetch posts:", error);
+        setMessage("An error occured while fetching posts. try again!");
+      }
+    };
+
+    fetchPosts()
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       setAvailableUser(
@@ -180,44 +208,6 @@ const page = () => {
     setPosted(false);
   };
 
-  //to fetch post
-  useEffect(() => {
-    const formatCreatedAt = (dateString) => {
-      const date = new Date(dateString);
-      return format(date, "do 'of' MMM, yyyy");
-    };
-
-    const fetchPosts = async () => {
-      try {
-        const res = await fetch("/api/post-apis/getposts-api");
-        const data = await res.json();
-
-        if (data.success) {
-          // Format the `createdAt` field for each post
-          const formattedPosts = data.posts.map((post) => ({
-            ...post,
-            createdAt: formatCreatedAt(post.createdAt),
-            postId: post._id,
-          } ));
-
-          const parsedUser = JSON.parse(loggedUser);
-          console.log(parsedUser.username, formattedPosts);
-          const filtered = formattedPosts.filter((post) => post.name === parsedUser.username)
-
-
-          setPosts(filtered);
-        } else {
-          setPosts([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch posts:", error);
-        setPosts([]);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
   //this toggles between the post button when creating post
   useEffect(() => {
     if (posting) {
@@ -228,23 +218,6 @@ const page = () => {
       setPostBtn("Post");
     }
   }, [posting, posted]);
-
-  
-  
-
-  // useEffect(() => {
-  //   if (user) {
-  //     const loggedInUser = user;
-
-  //     const available = posts.filter(
-  //       (post) => post.name === loggedInUser.username
-  //     );
-  //     setPosts(available)
-      
-
-  //     console.log("This is the one!:", available);
-  //   }
-  // }, [user]);
 
   return (
     <section className="mb-10">
