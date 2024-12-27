@@ -58,29 +58,6 @@ const page = () => {
           return format(date, "do 'of' MMM, yyyy");
         };
 
-        const fetchPosts = async () => {
-          try {
-            const res = await fetch("/api/post-apis/getposts-api");
-            const data = await res.json();
-
-            if (data.success) {
-              // Format the `createdAt` field for each post
-              const formattedPosts = data.posts.map((post) => ({
-                ...post,
-                createdAt: formatCreatedAt(post.createdAt),
-                postId: post._id,
-              }));
-
-              setPost(formattedPosts);
-            } else {
-              setPost([]);
-            }
-          } catch (error) {
-            console.error("Failed to fetch posts:", error);
-          }
-        };
-
-        fetchPosts();
         router.push("/");
       } else {
         handleError(data.message);

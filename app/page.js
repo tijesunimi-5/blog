@@ -64,47 +64,37 @@ const page = () => {
     }
   };
 
-  //to fetch post
-  useEffect(()=> {
-
-    if (post.length === 0) {
-      const formatCreatedAt = (dateString) => {
-        const date = new Date(dateString);
-        return format(date, "do 'of' MMM, yyyy");
-      };
-  
-      const fetchPosts = async () => {
-        try {
-          const res = await fetch("/api/post-apis/getposts-api");
-          const data = await res.json();
-  
-          if (data.success) {
-            // Format the `createdAt` field for each post
-            const formattedPosts = data.posts.map((post) => ({
-              ...post,
-              createdAt: formatCreatedAt(post.createdAt),
-              postId: post._id,
-            }));
-  
-            setPosts(formattedPosts);
-            console.log('working')
-          } else {
-            setPost([]);
-          }
-  
-          fetchPosts();
-        } catch (error) {
-          console.error("Failed to fetch posts:", error);
-          setPost([]);
+  // Fetch posts from the database on initial load
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch("/api/post-apis/getposts-api");
+        if (!response.ok) {
+          throw new Error("Failed to fetch posts");
         }
-      };
-    }
-  }, [post])
+        const data = await response.json();
+
+        // If localStorage has saved state, use it; otherwise, use fetched data
+        const savedPosts = localStorage.getItem("posts");
+        if (savedPosts) {
+          setPosts(JSON.parse(savedPosts));
+        } else {
+          setPosts(data.posts);
+        }
+      } catch (error) {
+        console.error("Error fetching posts:", error.message);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   return (
     <section>
       {posts.length === 0 ? (
-        <p className="text-center text-3xl font-bold">No Post Yet And Make Sure To Login First......</p>
+        <p className="text-center text-3xl font-bold">
+          No Post Yet......
+        </p>
       ) : (
         posts.map((post, index) => (
           <Card key={index} styles={"w-[360px] mx-2 mt-3"}>
