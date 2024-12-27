@@ -38,7 +38,6 @@ const page = () => {
   const [postContent, setPostContent] = useState("");
   const [message, setMessage] = useState();
   const [posting, setPosting] = useState(false);
-  const [posts, setPosts] = useState([]);
   const [posted, setPosted] = useState(false);
   const [postBtn, setPostBtn] = useState("");
   const [isLiked, setIsLiked] = useState(false);
@@ -47,6 +46,48 @@ const page = () => {
     "/default_picture.jpg"
   );
   const [userPosts, setUserPosts] = useState([]);
+  const [posts, setPosts] = useState([]); // Assuming your posts are stored here
+
+  //this function is to like a single post
+  const setLike = (postId, currentLikedStatus) => {
+    const updatedLiked = !currentLikedStatus;
+
+    const updatedPosts = posts.map((post) =>
+      post._id === postId ? { ...post, isLiked: updatedLiked } : post
+    );
+
+    // Update state
+    setPosts(updatedPosts);
+
+    // Persist to localStorage
+    localStorage.setItem("posts", JSON.stringify(updatedPosts));
+  };
+
+  const pinPost = async (postId, isPinned) => {
+    try {
+      console.log("Pinning post:", postId, isPinned);
+
+      const response = await fetch("/api/post-apis/updatePostStatus-api", {
+        method: "POST",
+        body: JSON.stringify({ postId, isPinned }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Update the state to reflect the new "pinned" status
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post._id === postId ? { ...post, isPinned: !post.isPinned } : post
+          )
+        );
+      } else {
+        console.error(result.message);
+      }
+    } catch (error) {
+      console.error("Error pinning post:", error);
+    }
+  };
 
   const handleMessage = (message) => {
     setMessage(message);
@@ -97,52 +138,6 @@ const page = () => {
   const createPost = () => {
     setPostInput(true);
   };
-
-  //to pin post
-  const pinPost = async (postId, currentPinnedStatus) => {
-    try {
-      const updatedPinned = !currentPinnedStatus;
-      const res = await fetch("/api/post-apis/updatePostStatus-api", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          postId,
-          isPinned: updatedPinned,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setPosts((prevPosts) =>
-          prevPosts.map((post) =>
-            post.postId === postId ? { ...post, isPinned: updatedPinned } : post
-          )
-        );
-      } else {
-        console.error("Failed to pin post:", data.message);
-      }
-    } catch (error) {
-      console.error("Error pinning post:", error);
-    }
-  };
-
-  //this function is to like a single post
-  const setLike = (postId, currentLikedStatus) => {
-    const updatedLiked = !currentLikedStatus;
-
-    console.log(postId, currentLikedStatus);
-
-    // Update the local state of posts
-    const updatedPosts = posts.map((post) =>
-      post._id === postId ? { ...post, isLiked: updatedLiked } : post
-    );
-
-    setPosts(updatedPosts); // Trigger re-render
-  };
-
 
   //to push the post to database
   const Post = async () => {
@@ -308,7 +303,7 @@ const page = () => {
                     <div>
                       <Button
                         styles={`flex px-2 ${white} absolute right-12`}
-                        onClick={() => pinPost(post.postId, post.isPinned)}
+                        onClick={() => pinPost(post._id, post.isPinned)}
                       >
                         {post.isPinned ? "Pinned" : "Pin"}
                         <FaThumbtack className="text-white m-1 ml-1" />
@@ -332,7 +327,6 @@ const page = () => {
                       <FaHeart className={`like ${width} m-1 ml-1`} />
                     </Button>
 
-                    
                     <Button styles={"flex text-white px-2"}>
                       Edit
                       <FaPen className="text-white m-1 ml-1" />

@@ -6,13 +6,12 @@ import { UserContext } from "@/context/userContext";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import React, { useContext, useEffect, useState } from "react";
-import { FaComment, FaHeart, FaShare, FaTrash } from "react-icons/fa";
+import { FaComment, FaEyeSlash, FaHeart, FaShare, FaTrash } from "react-icons/fa";
 
 const page = () => {
   const [posts, setPosts] = useState([]);
   const router = useRouter();
-  const { allUsers, updateAllUsers } = useContext(UserContext);
-  const { setPost, post, updatePost } = useContext(PostContext);
+  const { setPost, post, updatePost, addPost } = useContext(PostContext);
   const isLiked = false;
   const [isFollowing, setIsFollowing] = useState(false);
 
@@ -22,6 +21,7 @@ const page = () => {
     const storedPosts = localStorage.getItem("posts");
     if (storedPosts) {
       const parsedPosts = JSON.parse(storedPosts);
+      addPost(parsedPosts)
       setPost(parsedPosts); // Update context
       setPosts(parsedPosts); // Update local state
     }
@@ -32,13 +32,16 @@ const page = () => {
     const updatedLiked = !currentLikedStatus;
 
     const updatedPosts = posts.map((post) =>
-      post.postId === postId ? { ...post, isLiked: updatedLiked } : post
+      post._id === postId ? { ...post, isLiked: updatedLiked } : post
     );
 
-    updatePost({ postId, isLiked: updatedLiked });
-    setPosts(post);
-    // setPostsAndPersist(updatedPosts);
+    // Update state
+    setPosts(updatedPosts);
+
+    // Persist to localStorage
+    localStorage.setItem("posts", JSON.stringify(updatedPosts));
   };
+
 
   //this function is to toggle follow for a single post
   const toggleFollow = (postUser) => {
@@ -62,36 +65,11 @@ const page = () => {
   };
 
 
-  // Fetch posts from the database on initial load
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await fetch("/api/post-apis/getposts-api");
-        if (!response.ok) {
-          throw new Error("Failed to fetch posts");
-        }
-        const data = await response.json();
-        setPosts(data.posts);
-      } catch (error) {
-        console.error("Error fetching posts:", error.message);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
-  const deletePost = (postId) => {
-    const updatedPosts = posts.filter((post) => post._id !== postId);
-    setPosts(updatedPosts);
-    localStorage.setItem("posts", JSON.stringify(updatedPosts));
-  };
-
-
   return (
     <section>
       {posts.length === 0 ? (
-        <p className="text-center text-3xl font-bold">
-          No Post Yet......
+        <p className="text-center text-2xl mt-20 font-bold">
+          No Post Yet Login First. (or try refreshing).....
         </p>
       ) : (
         posts.map((post, index) => (
@@ -127,7 +105,7 @@ const page = () => {
               <p className="font-mono relative w-[310px]">{post.post}</p>
             </div>
 
-            <div className="bg-white flex justify-between overflow-hidden rounded w-[355px] py-2 px-1 ml-[-10px]">
+            <div className="bg-white flex justify-between overflow-hidden rounded w-[355px] py-2 px-5 ml-[-10px]">
               <Button
                 styles={`btn flex text-white px-2`}
                 onClick={() => setLike(post._id, post.isLiked)}
@@ -136,15 +114,17 @@ const page = () => {
                 <FaHeart className={`like m-1 ml-1`} />
               </Button>
 
-              <Button styles={"flex text-white px-2"}>
-                Share
-                <FaShare className=" m-1 ml-1" />
+              <Button styles={"flex text-white px-1"}>
+                Comment <FaComment className="text-white m-1 ml-1" />
               </Button>
 
-              <Button styles={"flex text-white px-1"} onClick={() => deletePost(post._id)}>
-                Delete
-                <FaTrash className="m-1 ml-1" />
-              </Button>
+              {/* <Button
+                styles={"flex text-white px-1"}
+                onClick={() => deletePost(post._id)}
+              >
+                Hide
+                <FaEyeSlash className="m-1 ml-1" />
+              </Button> */}
             </div>
 
             <div id="comment" className=""></div>

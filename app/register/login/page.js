@@ -53,10 +53,20 @@ const page = () => {
         console.log(data.blogger);
         handleError("Login successful");
 
-        const formatCreatedAt = (dateString) => {
-          const date = new Date(dateString);
-          return format(date, "do 'of' MMM, yyyy");
+        const fetchPosts = async () => {
+          try {
+            const response = await fetch("/api/post-apis/getposts-api");
+            if (!response.ok) {
+              throw new Error("Failed to fetch posts");
+            }
+            const data = await response.json();
+            setPost(data.posts);
+          } catch (error) {
+            console.error("Error fetching posts:", error.message);
+          }
         };
+
+        fetchPosts();
 
         router.push("/");
       } else {
