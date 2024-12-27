@@ -20,7 +20,7 @@ import Link from "next/link";
 import { PostContext } from "@/context/postContext";
 
 const page = () => {
-  const { addPost, post, setPost } = useContext(PostContext);
+  const { addPost, post, setPost, updatePost } = useContext(PostContext);
   const router = useRouter();
   const [PostInput, setPostInput] = useState(false);
   const white = "text-white";
@@ -77,7 +77,7 @@ const page = () => {
       }
     };
 
-    fetchPosts()
+    fetchPosts();
   }, [user]);
 
   useEffect(() => {
@@ -129,36 +129,20 @@ const page = () => {
     }
   };
 
-  //to set like post status
-  const setLike = async (postId, currentLikedStatus) => {
-    try {
-      const updatedLiked = !currentLikedStatus;
-      const res = await fetch("/api/post-apis/updatePostStatus-api", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          postId,
-          isLiked: updatedLiked,
-        }),
-      });
+  //this function is to like a single post
+  const setLike = (postId, currentLikedStatus) => {
+    const updatedLiked = !currentLikedStatus;
 
-      const data = await res.json();
+    console.log(postId, currentLikedStatus);
 
-      if (data.success) {
-        setPosts((prevPosts) =>
-          prevPosts.map((post) =>
-            post.postId === postId ? { ...post, isLiked: updatedLiked } : post
-          )
-        );
-      } else {
-        console.error("Failed:", data.message);
-      }
-    } catch (error) {
-      console.error("Failed:", error);
-    }
+    // Update the local state of posts
+    const updatedPosts = posts.map((post) =>
+      post._id === postId ? { ...post, isLiked: updatedLiked } : post
+    );
+
+    setPosts(updatedPosts); // Trigger re-render
   };
+
 
   //to push the post to database
   const Post = async () => {
@@ -219,11 +203,35 @@ const page = () => {
     }
   }, [posting, posted]);
 
+  //delete posts!!
+  const deletePost = async (postId) => {
+    try {
+      const res = await fetch("/api/post-apis/deleteposts-api", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ postId }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete post");
+      }
+
+      const data = await res.json();
+      console.log("Post deleted successfully:", data);
+      handleMessage(data.message);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
   return (
     <section className="mb-10">
       {user ? (
         <>
-          <div className="flex">
+          <div className="flex justify-between">
             <img
               src={profile_picture || "/default_picture.jpg"}
               className="w-[150px] ml-[-10px]"
@@ -282,7 +290,7 @@ const page = () => {
                 No posts yet.....
               </p>
             ) : (
-              posts.map((post, index) => (
+              userPosts.map((post, index) => (
                 <Card key={index} styles={"mt-2"}>
                   <div id="userProfile" className="mb-4 flex relative">
                     <div className="mt-3">
@@ -306,7 +314,10 @@ const page = () => {
                         <FaThumbtack className="text-white m-1 ml-1" />
                       </Button>
 
-                      <Button styles={"flex text-white absolute px-2 right-0"}>
+                      <Button
+                        styles={"flex text-white absolute px-2 right-0"}
+                        onClick={() => deletePost(post._id)}
+                      >
                         <FaTrash className="text-white m-1 ml-1" />
                       </Button>
                     </div>
@@ -315,16 +326,13 @@ const page = () => {
                   <div className="bg-white flex justify-between overflow-hidden rounded w-[355px] py-2 px-1 ml-[-10px] mt-3">
                     <Button
                       styles={`btn flex ${color} px-2`}
-                      onClick={() => setLike(post.postId, post.isLiked)}
+                      onClick={() => setLike(post._id, post.isLiked)}
                     >
                       {post.isLiked ? "Liked" : "Like"}
                       <FaHeart className={`like ${width} m-1 ml-1`} />
                     </Button>
 
-                    <Button styles={"flex text-white px-2"}>
-                      Share
-                      <FaShare className="text-white m-1 ml-1" />
-                    </Button>
+                    
                     <Button styles={"flex text-white px-2"}>
                       Edit
                       <FaPen className="text-white m-1 ml-1" />

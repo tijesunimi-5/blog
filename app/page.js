@@ -48,21 +48,19 @@ const page = () => {
     if (storedPosts) {
       const parsedPosts = JSON.parse(storedPosts);
 
-      // Find the data for the given name
-      const matchedData = parsedPosts.find((post) => post.name === postUser);
+      // Find the post user and toggle follow
+      const updatedPosts = parsedPosts.map((post) =>
+        post.name === postUser
+          ? { ...post, isFollowing: !post.isFollowing }
+          : post
+      );
 
-      if (matchedData) {
-        console.log("Data found:", matchedData);
-        // Perform any action with the matched data
-        // e.g., set it to state
-        // setPosts([matchedData]);
-      } else {
-        console.log("No data found for the given name.");
-      }
-    } else {
-      console.log("No posts found in localStorage.");
+      // Update the state and persist to localStorage
+      setPosts(updatedPosts);
+      localStorage.setItem("posts", JSON.stringify(updatedPosts));
     }
   };
+
 
   // Fetch posts from the database on initial load
   useEffect(() => {
@@ -73,14 +71,7 @@ const page = () => {
           throw new Error("Failed to fetch posts");
         }
         const data = await response.json();
-
-        // If localStorage has saved state, use it; otherwise, use fetched data
-        const savedPosts = localStorage.getItem("posts");
-        if (savedPosts) {
-          setPosts(JSON.parse(savedPosts));
-        } else {
-          setPosts(data.posts);
-        }
+        setPosts(data.posts);
       } catch (error) {
         console.error("Error fetching posts:", error.message);
       }
@@ -88,6 +79,13 @@ const page = () => {
 
     fetchPosts();
   }, []);
+
+  const deletePost = (postId) => {
+    const updatedPosts = posts.filter((post) => post._id !== postId);
+    setPosts(updatedPosts);
+    localStorage.setItem("posts", JSON.stringify(updatedPosts));
+  };
+
 
   return (
     <section>
@@ -108,7 +106,7 @@ const page = () => {
                 <h1 className="font-extrabold text-[1.5em]">{post.name}</h1>
                 <Button
                   styles={"w-[110px] mt-5"}
-                  onClick={() => toggleFollow()}
+                  onClick={() => toggleFollow(post.name)}
                 >
                   {post.isFollowing ? "Following" : "Follow"}
                 </Button>
@@ -143,7 +141,7 @@ const page = () => {
                 <FaShare className=" m-1 ml-1" />
               </Button>
 
-              <Button styles={"flex text-white px-1"}>
+              <Button styles={"flex text-white px-1"} onClick={() => deletePost(post._id)}>
                 Delete
                 <FaTrash className="m-1 ml-1" />
               </Button>
