@@ -265,7 +265,7 @@ const page = () => {
               <div className="flex justify-between ml-[-20px]">
                 <Button
                   styles={"w-[100px] flex justify-between px-5 py-1"}
-                  onClick={() => router.push("/edit")}
+                  onClick={() => router.push("/settings")}
                 >
                   Edit <FaTools className="mt-1" />
                 </Button>

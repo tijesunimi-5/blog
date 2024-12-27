@@ -6,29 +6,25 @@ import Button from "@/components/Button";
 export default function UserProfile() {
   const userId = usePathname();
   const mainId = userId.split("/").pop(); // Extract User ID
-  const [users, setUsers] = useState([]);
-  const [userProfile, setUserProfile] = useState(null);
+  const [users, setUsers] = useState();
+  const [userProfile, setUserProfile] = useState();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followers, setFollowers] = useState(0);
-
+  
+  // console.log("registered users:", JSON.parse(registeredUser));
+  
   useEffect(() => {
-    try {
-      // Load users from localStorage
-      const savedUsers = JSON.parse(localStorage.getItem("users")) || [];
-      setUsers(savedUsers);
+    const registeredUser = localStorage.getItem('users')
+    const parsedRegUsers = JSON.parse(registeredUser);
 
-      // Find the user profile based on ID
-      const profile = savedUsers.find((user) => user.id === parseInt(mainId));
-      if (profile) {
-        setUserProfile(profile);
-        setIsFollowing(profile.isFollowing || false);
-        setFollowers(profile.followers || 0);
-      }
-    } catch (error) {
-      console.error("Error loading users from localStorage:", error);
-    }
+    const clickedUser = parsedRegUsers.filter((user) => user._id === mainId);
 
-  }, [mainId]);
+    setUsers(clickedUser);
+    // setUserProfile(clickedUser)
+    console.log('this is user profile hook',userProfile)
+    console.log('working', clickedUser)
+  }, [mainId])
+
 
  const toggleFollow = () => {
    const updatedUsers = users.map((user) => {
@@ -48,7 +44,7 @@ export default function UserProfile() {
  };
 
 
-  if (!userProfile) {
+  if (!users) {
     return <div>User not found.</div>;
   }
 
@@ -57,14 +53,14 @@ export default function UserProfile() {
       <div className="profile-header">
         <div className="rounded-full bg-red-300 w-[100px] h-[100px] border-2 border-white overflow-hidden">
           <img
-            src={userProfile.profile_picture || "/default-profile.png"}
-            alt={userProfile.name || "Profile"}
+            src={users.profile_picture || "/default_picture.jpg"}
+            alt={users.username || "Profile"}
           />
         </div>
         <h1 className="text-2xl font-bold">
-          {userProfile.name || "Unknown User"}
+          {users.username || "Unknown User"}
         </h1>
-        <p>{userProfile.bio || "No bio available."}</p>
+        <p>{users.bio || "No bio available."}</p>
         <p>Followers: {followers}</p>
       </div>
       <Button styles={"w-[110px] mt-5"} onClick={toggleFollow}>
@@ -73,9 +69,7 @@ export default function UserProfile() {
       <div className="profile-posts">
         <h2 className="text-xl font-semibold">Best Post:</h2>
         <p className="post">
-          {typeof userProfile.post === "object"
-            ? JSON.stringify(userProfile.post, null, 2)
-            : userProfile.post || "No post available."}
+          {users.post}
         </p>
       </div>
     </section>
