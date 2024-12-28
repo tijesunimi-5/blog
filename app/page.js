@@ -4,9 +4,16 @@ import Card from "@/components/Card";
 import { PostContext } from "@/context/postContext";
 import { UserContext } from "@/context/userContext";
 import { format } from "date-fns";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useContext, useEffect, useState } from "react";
-import { FaComment, FaEyeSlash, FaHeart, FaShare, FaTrash } from "react-icons/fa";
+import {
+  FaComment,
+  FaEyeSlash,
+  FaHeart,
+  FaShare,
+  FaTrash,
+} from "react-icons/fa";
 
 const page = () => {
   const [posts, setPosts] = useState([]);
@@ -21,7 +28,7 @@ const page = () => {
     const storedPosts = localStorage.getItem("posts");
     if (storedPosts) {
       const parsedPosts = JSON.parse(storedPosts);
-      addPost(parsedPosts)
+      addPost(parsedPosts);
       setPost(parsedPosts); // Update context
       setPosts(parsedPosts); // Update local state
     }
@@ -41,7 +48,6 @@ const page = () => {
     // Persist to localStorage
     localStorage.setItem("posts", JSON.stringify(updatedPosts));
   };
-
 
   //this function is to toggle follow for a single post
   const toggleFollow = (postUser) => {
@@ -64,12 +70,15 @@ const page = () => {
     }
   };
 
-
   return (
     <section>
       {posts.length === 0 ? (
         <p className="text-center text-2xl mt-20 font-bold">
-          No Post Yet Login First. (or try refreshing).....
+          No Post Yet{" "}
+          <Link href={"/register/login"} className="underline">
+            Login
+          </Link>{" "}
+          First. (or try refreshing).....
         </p>
       ) : (
         posts.map((post, index) => (

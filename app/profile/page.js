@@ -46,54 +46,45 @@ const page = () => {
     "/default_picture.jpg"
   );
   const [userPosts, setUserPosts] = useState([]);
-  const [posts, setPosts] = useState([]); // Assuming your posts are stored here
+  const [posts, setPosts] = useState([]);
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editedContent, setEditedContent] = useState("");
 
-  //this function is to like a single post
-  const setLike = (postId, currentLikedStatus) => {
-    const updatedLiked = !currentLikedStatus;
-
-    const updatedPosts = posts.map((post) =>
-      post._id === postId ? { ...post, isLiked: updatedLiked } : post
-    );
-
-    // Update state
-    setPosts(updatedPosts);
-
-    // Persist to localStorage
-    localStorage.setItem("posts", JSON.stringify(updatedPosts));
-  };
-
-  const pinPost = async (postId, isPinned) => {
+  //edit post function
+  const editPost = async (postId) => {
     try {
-      console.log("Pinning post:", postId, isPinned);
-
-      const response = await fetch("/api/post-apis/updatePostStatus-api", {
-        method: "POST",
-        body: JSON.stringify({ postId, isPinned }),
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch("/api/post-apis/editpost-api", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId,
+          editedPost: editedContent,
+        }),
       });
 
-      const result = await response.json();
-      if (result.success) {
-        // Update the state to reflect the new "pinned" status
-        setPosts((prevPosts) =>
+      const data = await res.json();
+      if (data.success) {
+        handleMessage("Post updated successfully.");
+
+        setUserPosts((prevPosts) =>
           prevPosts.map((post) =>
-            post._id === postId ? { ...post, isPinned: !post.isPinned } : post
+            post._id === postId ? { ...post, post: editedContent } : post
           )
         );
+
+        setEditingPostId(null);
       } else {
-        console.error(result.message);
+        handleMessage("Failed to update post.");
       }
     } catch (error) {
-      console.error("Error pinning post:", error);
+      console.error("Error updatinf post:", error);
+      handleMessage("An error occured while updating the post");
     }
   };
 
-  const handleMessage = (message) => {
-    setMessage(message);
-    setTimeout(() => setMessage(""), 3000);
-  };
-
+  //fetchPosts for logged user
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -121,6 +112,64 @@ const page = () => {
     fetchPosts();
   }, [user]);
 
+  // Function to like a single post and update userPosts
+  const setLike = (postId, currentLikedStatus) => {
+    const updatedLiked = !currentLikedStatus;
+
+    // Update the specific post in userPosts
+    const updatedUserPosts = userPosts.map((post) =>
+      post._id === postId ? { ...post, isLiked: updatedLiked } : post
+    );
+
+    // Update state
+    setUserPosts(updatedUserPosts);
+
+    // Optionally update the full posts list if needed
+    const updatedPosts = posts.map((post) =>
+      post._id === postId ? { ...post, isLiked: updatedLiked } : post
+    );
+    setPosts(updatedPosts);
+
+    // You can persist to the database if required
+    console.log("Updated user posts:", updatedUserPosts);
+  };
+
+  const pinPost = async (postId, isPinned) => {
+    try {
+      console.log("Pinning post:", postId, isPinned);
+
+      const response = await fetch("/api/post-apis/updatePostStatus-api", {
+        method: "POST",
+        body: JSON.stringify({ postId, isPinned }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Update the state to reflect the new "pinned" status
+        if (!isPinned) {
+          setIsPinned(true);
+        }
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post._id === postId ? { ...post, isPinned: !post.isPinned } : post
+          )
+        );
+      } else {
+        console.error(result.message);
+      }
+    } catch (error) {
+      console.error("Error pinning post:", error);
+    }
+  };
+
+  //advance error message handler coupled with timeout
+  const handleMessage = (message) => {
+    setMessage(message);
+    setTimeout(() => setMessage(""), 3000);
+  };
+
+  //setting user states
   useEffect(() => {
     if (user) {
       setAvailableUser(
@@ -222,6 +271,24 @@ const page = () => {
     }
   };
 
+  //fetch for all post
+  useEffect(() => {
+    const fetchAllPost = async () => {
+      try {
+        const response = await fetch("/api/post-apis/getposts-api");
+        if (!response.ok) {
+          throw new Error("Failed to fetch posts");
+        }
+        const data = await response.json();
+        setPost(data.posts);
+      } catch (error) {
+        console.error("Error fetching posts:", error.message);
+      }
+    };
+
+    fetchAllPost();
+  }, [user]);
+
   return (
     <section className="mb-10">
       {user ? (
@@ -236,7 +303,7 @@ const page = () => {
               <div>{bio}</div>
               <div className="flex justify-between pr-7">
                 <span>followers: {followers}</span>
-                <span>Following: {following}</span>
+                {/* <span>Following: {following}</span> */}
               </div>
               <div className="flex justify-between ml-[-20px]">
                 <Button
@@ -246,7 +313,7 @@ const page = () => {
                   Edit <FaTools className="mt-1" />
                 </Button>
                 <Button
-                  styles={"flex justify-between px-3 py-1"}
+                  styles={"flex justify-between px-1 py-1"}
                   onClick={createPost}
                 >
                   Create a post <FaPen className="mt-1 ml-2" />
@@ -280,7 +347,7 @@ const page = () => {
             {/* still going to map posts */}
             <h1 className="text-2xl font-bold mb-5">Posts -</h1>
 
-            {posts.length === 0 ? (
+            {userPosts.length === 0 ? (
               <p className="text-center text-3xl font-bold">
                 No posts yet.....
               </p>
@@ -300,12 +367,13 @@ const page = () => {
                       </h1>
                       <p className="ml-1">{post.bio}</p>
                     </div>
+
                     <div>
                       <Button
                         styles={`flex px-2 ${white} absolute right-12`}
                         onClick={() => pinPost(post._id, post.isPinned)}
                       >
-                        {post.isPinned ? "Pinned" : "Pin"}
+                        {isPinned ? "Pinned" : "Pin"}
                         <FaThumbtack className="text-white m-1 ml-1" />
                       </Button>
 
@@ -317,7 +385,15 @@ const page = () => {
                       </Button>
                     </div>
                   </div>
-                  <p>{post.post}</p>
+                  {editingPostId === post._id ? (
+                    <textarea
+                      className="post border-2 border-black rounded-md w-[328px] h-[150px] mx-1 px-1"
+                      value={editedContent}
+                      onChange={(e) => setEditedContent(e.target.value)}
+                    />
+                  ) : (
+                    <p>{post.post}</p>
+                  )}
                   <div className="bg-white flex justify-between overflow-hidden rounded w-[355px] py-2 px-1 ml-[-10px] mt-3">
                     <Button
                       styles={`btn flex ${color} px-2`}
@@ -327,15 +403,30 @@ const page = () => {
                       <FaHeart className={`like ${width} m-1 ml-1`} />
                     </Button>
 
-                    <Button styles={"flex text-white px-2"}>
-                      Edit
-                      <FaPen className="text-white m-1 ml-1" />
+                    <Button
+                      styles={"flex text-white px-2"}
+                      onClick={() => {
+                        setEditingPostId(post._id);
+                        setEditedContent(post.post);
+                      }}
+                    >
+                      Edit <FaPen className="text-white m-1 ml-1" />
                     </Button>
 
                     <Button styles={"flex text-white px-1"}>
                       Comment <FaComment className="text-white m-1 ml-1" />
                     </Button>
+
+                    {editingPostId === post._id && (
+                      <Button
+                        styles={"flex text-white px-2"}
+                        onClick={() => editPost(post._id)}
+                      >
+                        Save <FaRocket className="text-white m-1 ml-1" />
+                      </Button>
+                    )}
                   </div>
+
                   <p className="pt-4 underline">created at: {post.createdAt}</p>
                 </Card>
               ))
